@@ -12,12 +12,13 @@ var path = require('path');
 app.use(cors())
 app.use(bodyParser({extended:true}))
 app.use(authenticationRoute)
-app.use(authMiddleware);
 app.use(express.static(path.join(__dirname, 'public'))); 
 
 app.get("/", (req, res)=>{
-
+    res.sendFile(path.join(public, 'index.html'));
 })
+app.use(authMiddleware);
+
 
 mongo.connect().then((result)=>{
     console.log(result)
