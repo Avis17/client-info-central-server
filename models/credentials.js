@@ -20,9 +20,12 @@ const authSchema = new mongoose.Schema({
         required : true,
         type:String,
         default : "developer"
+    },
+    token: { 
+        type: String 
     }
   }, { timestamps: true });
 
-const authModel = mongoose.model("authentiaction",authSchema);
+const authModel = mongoose.model("authentication",authSchema);
 
 module.exports = authModel;

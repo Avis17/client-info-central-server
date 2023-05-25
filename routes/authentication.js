@@ -2,6 +2,8 @@
 const router = require("express").Router();
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
+const jwt = require('jsonwebtoken');
+const secretKey = 'clent-info-central-secret-key'; 
 
 const authentiaction = require("../models/credentials");
 
@@ -9,9 +11,16 @@ router.post("/login", (req, res)=>{
     if(req.body){
         authentiaction.find({email : req.body.email}).then((result)=>{
               if (result.length > 0) {
-                bcrypt.compare(req.body.password, result[0].password, function(err, result1) {
+                bcrypt.compare(req.body.password, result[0].password, async (err, result1)=> {
                     if(result1){
-                        res.send({status : 200, message : "success", data: result[0]})
+                        // Generate a JWT token
+                        const token = jwt.sign({ email: authentiaction.email }, secretKey);
+
+                        // Store the token in the database
+                        let user = new authentiaction(result[0]);
+                        user.token = token;
+                        await user.save()
+                        res.send({status : 200, message : "success", data: user})
                         return;
                     }else{
                         res.send({
