@@ -3,9 +3,11 @@ const router = require("express").Router();
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
 const jwt = require('jsonwebtoken');
-const secretKey = 'clent-info-central-secret-key'; 
+const secretKey = 'clent-info-central-2023-secret-key-siva'; 
+const crypto = require("./crypro");
 
 const authentiaction = require("../models/credentials");
+const AppMetaModel = require("../models/appmeta");
 
 router.post("/login", (req, res)=>{
     if(req.body){
@@ -15,17 +17,45 @@ router.post("/login", (req, res)=>{
                     if(result1){
                         // Generate a JWT token
                         const token = jwt.sign({ email: authentiaction.email }, secretKey);
-
                         // Store the token in the database
                         let user = new authentiaction(result[0]);
                         user.token = token;
-                        await user.save()
-                        res.send({status : 200, message : "success", data: user})
+                        await user.save();
+                        const app_meta_details = await authentiaction.aggregate([
+                            {
+                              $match: { email: user.email }
+                            },
+                            {
+                              $lookup: {
+                                from: 'app_meta_objects', // Collection name of appMetaModel
+                                localField: 'email',
+                                foreignField: 'company_email',
+                                as: 'app_meta_details'
+                              }
+                            },
+                            {
+                              $unwind: {
+                                path: '$app_meta_details',
+                                preserveNullAndEmptyArrays: true
+                              }
+                            },
+                            {
+                              $project: {
+                                _id: 0,
+                                token : 1,
+                                email: 1,
+                                password: 1,
+                                authorizeTo: 1,
+                                app_meta_details: 1
+                              }
+                            }
+                          ]);
+                        res.send({status : 200, message : "success", data: crypto.encrypt(JSON.stringify(app_meta_details[0]))})
                         return;
                     }else{
                         res.send({
                             status:404,
-                            message : "Invalid"
+                            message : "No data found"
                         })
                         return;
                     }
@@ -41,7 +71,7 @@ router.post("/login", (req, res)=>{
     }else{
         res.send({
             status : 400,
-            message : 'Invalid'
+            message : 'Invalid reqest'
         })
         return;
     }
