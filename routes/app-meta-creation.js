@@ -16,7 +16,7 @@ router.get("/get-app-categories", (req, res) => {
             return;
         }
     }).catch((err) => {
-        res.status(400).send({ message: err });
+        res.status(500).send({status : 500,  message: err });
         return;
     })
 })
@@ -33,13 +33,13 @@ router.post("/add-app-new-category", (req, res) => {
     }).catch((err) => {
         if (err.code == 11000) {
             res.send({
-                status: 400,
+                status: 401,
                 message: 'Dublicate'
             })
             return;
         } else {
             res.send({
-                status: 500,
+                status: 400,
                 message: 'Invalid'
             })
             return;
@@ -61,7 +61,7 @@ router.post("/create-new-app-meta", (req, res) => {
         console.log(err.code)
         if (err.code == 11000) {
             res.send({
-                status: 400,
+                status: 401,
                 message: 'Dublicate'
             })
             return;
@@ -93,7 +93,7 @@ router.get("/get-app-metas", (req, res) => {
             return;
         }
     }).catch((err) => {
-        res.status(400).send({ message: err });
+        res.status(500).send({status : 500,  message: err });
         return;
     })
 })

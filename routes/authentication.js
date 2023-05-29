@@ -61,11 +61,11 @@ router.post("/login", (req, res)=>{
                     }
                 });
               }else{
-                    res.status(401).send({ message: "Invalid user" });
+                    res.status(401).send({status : 401, message: "Invalid user" });
                     return;
               }
         }).catch((err)=>{
-                    res.status(400).send({ message: err });
+                    res.status(400).send({status : 500,  message: err });
                     return;
         })
     }else{
