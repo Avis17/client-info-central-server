@@ -33,9 +33,32 @@ const table_fields_schema = new mongoose.Schema({
     isUnique : {
         required : true,
         type:Boolean,
+    },
+    isRequired : {
+        required : true,
+        type:String,
+    },
+    field_options : {
+        required : false,
+        type:Array,
+    },
+    isField_table_sorting : {
+        required : true,
+        type:Boolean,
     }
 
   });
+
+  const chart_fields_schema = new mongoose.Schema({
+    chart_type : {
+        required : true,
+        type:String,
+    },
+    chart_field_name : {
+        required : true,
+        type:String,
+    }
+  })
 const appMetaSchema = new mongoose.Schema({
     company_name : {
         required : true,
@@ -57,6 +80,10 @@ const appMetaSchema = new mongoose.Schema({
         required : true,
         type:String,
     },
+    client_name : {
+        required : true,
+        type:String,
+    },
     application_table_required : {
         required : true,
         type:Boolean,
@@ -65,8 +92,22 @@ const appMetaSchema = new mongoose.Schema({
         required : true,
         type:Boolean,
     },
+    db_details : {
+        dbName : {
+            required : true,
+            type:String,
+            unique: true,
+        },
+        customerCollectionName : {
+            required : true,
+            type:String,
+        }
+    },
     table_fileds : [
         table_fields_schema
+    ],
+    charts_details : [
+        chart_fields_schema
     ]
   }, { timestamps: true });
 

@@ -93,15 +93,15 @@ router.post("/signin", async (req, res)=>{
                }).catch((err)=>{
                    if(err.code == 11000){
                        res.send({
-                           status : 400,
-                           message : 'Dublicate'
-                       })
+                           status : 409,
+                           message: err
+                        })
                        return;
                    }else{
                        res.send({
                            status : 500,
-                           message : 'Invalid'
-                       })
+                           message: err
+                        })
                        return;
                    }
                })

@@ -16,33 +16,41 @@ entitiesRouter.post('/', async (req, res) => {
     const collectionData = req.body.collectionData;
     const dbUrl = `mongodb://127.0.0.1:27017/${dbName}`;
     const options = {
-    //   useNewUrlParser: true,
-    //   useUnifiedTopology: true
+      //   useNewUrlParser: true,
+      //   useUnifiedTopology: true
     };
-    connectionManager.getConnection(dbName, dbUrl, options).then(async (connection)=>{
-        const Entity = connection.model(collectionName , new mongoose.Schema(entitySchema));
-        // console.log(Entity)
-        const newEntity = new Entity(collectionData);
-        try {
-            const savedEntity = await newEntity.save();
-            // Release the connection
-            connectionManager.releaseConnection(dbName);
-            res.status(200).json({status : 200,data:crypto.encrypt(JSON.stringify(savedEntity))});
-          } catch (error) {
-            // Handle specific error types
-            connectionManager.releaseConnection(dbName);
-            if (error.code === 11000) {
-              // Duplicate key error
-              return res.status(401).json({status : 401, error: 'Entity already exists' });
-            }
-            // Handle other errors
-            res.status(400).json({status : 400, error: error });
-          }
-    }).catch((err)=>{
-        console.log(err)
+    connectionManager.getConnection(dbName, dbUrl, options).then(async (connection) => {
+      const Entity = connection.model(collectionName, new mongoose.Schema({}, { strict: false, timestamps: true }));
+      // console.log(Entity)
+      const newEntity = new Entity(collectionData);
+      try {
+        const savedEntity = await newEntity.save();
+        // Release the connection
+        connectionManager.releaseConnection(dbName);
+        res.status(200).json({ status: 200, data: crypto.encrypt(JSON.stringify(savedEntity)) });
+      } catch (error) {
+        // Handle specific error types
+        connectionManager.releaseConnection(dbName);
+        if (error.code === 11000) {
+          // Duplicate key error
+          return res.status(409).json({
+            status: 409,
+            message: error
+          });
+        }
+        // Handle other errors
+        res.status(400).json({ status: 400, message: error });
+      }
+    }).catch((err) => {
+      res.status(500).json({
+        status: 500, message: error
+      });
     })
+
   } catch (error) {
-    res.status(500).json({status : 500,  error: 'error' });
+    res.status(500).json({
+      status: 500, message: error
+    });
   }
 });
 
@@ -59,15 +67,15 @@ entitiesRouter.post('/get-all-entities', async (req, res) => {
       useUnifiedTopology: true
     };
     const connection = await connectionManager.getConnection(dbName, dbUrl, options);
-    const Entity = connection.model(collectionName , new mongoose.Schema(entitySchema));
+    const Entity = connection.model(collectionName, new mongoose.Schema(entitySchema, { timestamps: true }));
     const resData = await Entity.find(querydata);
 
     // Release the connection
     connectionManager.releaseConnection(dbName);
 
-    res.status(200).json({status : 200, data:crypto.encrypt(JSON.stringify(resData))});
+    res.status(200).json({ status: 200, data: crypto.encrypt(JSON.stringify(resData)) });
   } catch (error) {
-    res.status(500).json({status : 500, error: 'Internal Server Error' });
+    res.status(500).json({ status: 500, message:error });
   }
 });
 
@@ -84,16 +92,16 @@ entitiesRouter.put('/update-entity-by-id/:id', async (req, res) => {
       useUnifiedTopology: true
     };
     const connection = await connectionManager.getConnection(dbName, dbUrl, options);
-    const Entity = connection.model(collectionName , new mongoose.Schema(entitySchema));
+    const Entity = connection.model(collectionName, new mongoose.Schema(entitySchema, { timestamps: true }));
     const resData = await Entity.findByIdAndUpdate(req.params.id, collectionData, { new: true });
     // Release the connection
     connectionManager.releaseConnection(dbName);
     if (!resData) {
-      return res.status(404).json({status : 404, error: 'Entity not found' });
+      return res.status(404).json({ status: 409, error: 'Entity not found' });
     }
-    res.status(200).json({status : 200, data:crypto.encrypt(JSON.stringify(resData))});
+    res.status(200).json({ status: 200, data: crypto.encrypt(JSON.stringify(resData)) });
   } catch (error) {
-    res.status(500).json({status : 500, error: 'Internal Server Error' });
+    res.status(500).json({ status: 500, message:error });
   }
 });
 
@@ -109,17 +117,17 @@ entitiesRouter.delete('/delete-entity-by-id/:id', async (req, res) => {
       useUnifiedTopology: true
     };
     const connection = await connectionManager.getConnection(dbName, dbUrl, options);
-    const Entity = connection.model(collectionName , new mongoose.Schema(entitySchema));
+    const Entity = connection.model(collectionName, new mongoose.Schema(entitySchema, { timestamps: true }));
     const resData = await Entity.findByIdAndDelete(req.params.id);
     // Release the connection
     connectionManager.releaseConnection(dbName);
     if (!resData) {
-      return res.status(404).json({status : 404, error: 'Entity not found' });
+      return res.status(404).json({ status: 404, error: 'Entity not found' });
     }
-    res.status(200).json({status : 200, data: crypto.encrypt('Entity deleted successfully') });
+    res.status(200).json({ status: 200, data: crypto.encrypt('Entity deleted successfully') });
   } catch (error) {
-    res.status(500).json({status : 500, error: 'Internal Server Error' });
-}
+    res.status(500).json({ status: 500, message:error });
+  }
 });
 
 module.exports = entitiesRouter;

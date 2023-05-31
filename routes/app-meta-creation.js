@@ -33,14 +33,14 @@ router.post("/add-app-new-category", (req, res) => {
     }).catch((err) => {
         if (err.code == 11000) {
             res.send({
-                status: 401,
-                message: 'Dublicate'
+                status: 409,
+                message: err
             })
             return;
         } else {
             res.send({
-                status: 400,
-                message: 'Invalid'
+                status: 500,
+                message: err
             })
             return;
         }
@@ -57,26 +57,25 @@ router.post("/create-new-app-meta", (req, res) => {
         })
         return;
     }).catch((err) => {
-        console.log(err)
-        console.log(err.code)
         if (err.code == 11000) {
             res.send({
-                status: 401,
-                message: 'Dublicate'
+                status: 409,
+                message: err
             })
             return;
         } else {
             res.send({
-                status: 400,
-                message: 'Invalid'
+                status: 500,
+                message:err
             })
             return;
         }
     })
 })
 
-router.get("/get-app-metas", (req, res) => {
-    AppMetaModel.find({}).then((result) => {
+router.post("/get-app-metas", (req, res) => {
+    const querydata = req.body.query;
+    AppMetaModel.find(querydata).then((result) => {
         if(result){
             res.send({
                 status: 200,
@@ -110,18 +109,16 @@ router.post("/delete-app-meta", (req, res) => {
             })
             return;
         }).catch((err) => {
-            console.log(err)
-            console.log(err.code)
             if (err.code == 11000) {
                 res.send({
-                    status: 400,
-                    message: 'Dublicate'
+                    status: 409,
+                    message: err
                 })
                 return;
             } else {
                 res.send({
                     status: 500,
-                    message: 'Invalid'
+                    message: err
                 })
                 return;
             }
