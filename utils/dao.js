@@ -2,13 +2,13 @@
 const {Mongoose, default: mongoose} = require("mongoose")
 // const URL = "mongodb+srv://pvadivelsiva:wKqEdzQ9bNUK0AiM@cluster0.ucunosj.mongodb.net/?retryWrites=true&w=majority"
 
-// const dbUrl = `mongodb+srv://username:password@clustername.mongodb.net/${dbName}?retryWrites=true&w=majority`;
+var DBURL = "mongodb+srv://pvadivelsiva:client-info-central2023@cluster0.ucunosj.mongodb.net/cic?retryWrites=true&w=majority"
 
 const URL = "mongodb://127.0.0.1:27017/cic"
 const connect = ()=>{
     return new Promise((resolve, reject)=>{
         try{
-            mongoose.connect(URL, {
+            mongoose.connect(DBURL, {
                 useNewUrlParser: true,
                 useUnifiedTopology: true
               }).then((response)=>{
