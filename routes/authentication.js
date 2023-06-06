@@ -77,7 +77,7 @@ router.post("/login", (req, res)=>{
     }
 })
 
-router.post("/signin", async (req, res)=>{
+router.post("/app/cic/users/v1/signin", async (req, res)=>{
     if(req.body){
         bcrypt.genSalt(saltRounds, function(err, salt) {
             bcrypt.hash(req.body.password, salt, function(err, hash) {

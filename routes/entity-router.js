@@ -2,7 +2,7 @@ const express = require('express');
 const entitiesRouter = express.Router();
 const mongoose = require('mongoose');
 const crypto = require("./crypro");
-var DBURL = "mongodb+srv://pvadivelsiva:client-info-central2023@cluster0.ucunosj.mongodb.net/"
+// var DBURL = "mongodb+srv://pvadivelsiva:client-info-central2023@cluster0.ucunosj.mongodb.net/"
 
 // Create an entity
 entitiesRouter.post('/', async (req, res) => {
@@ -11,8 +11,8 @@ entitiesRouter.post('/', async (req, res) => {
     const collectionName = req.body.collectionName;
     const entitySchema = req.body.schema;
     const collectionData = req.body.collectionData;
-    const dbUrl = `mongodb://127.0.0.1:27017/${dbName}`;
-    DBURL = DBURL+dbName+"?retryWrites=true&w=majority";
+    const DBURL = `mongodb://127.0.0.1:27017/${dbName}`;
+    // DBURL = DBURL+dbName+"?retryWrites=true&w=majority";
     const options = {
       //   useNewUrlParser: true,
       //   useUnifiedTopology: true
@@ -49,8 +49,8 @@ entitiesRouter.post('/get-all-entities', async (req, res) => {
     const collectionName = req.body.collectionName;
     const entitySchema = req.body.schema;
     const querydata = req.body.queryData;
-    const dbUrl = `mongodb://127.0.0.1:27017/${dbName}`;
-    DBURL = DBURL+dbName+"?retryWrites=true&w=majority";
+    const DBURL = `mongodb://127.0.0.1:27017/${dbName}`;
+    // DBURL = DBURL+dbName+"?retryWrites=true&w=majority";
     const options = {
       useNewUrlParser: true,
       useUnifiedTopology: true
@@ -58,7 +58,7 @@ entitiesRouter.post('/get-all-entities', async (req, res) => {
     const connection = mongoose.createConnection(DBURL, options);
     const db = connection.useDb(dbName);
     const Entity = db.model(collectionName, new mongoose.Schema({}, { strict: false, timestamps: true }));
-    const resData = await Entity.find(querydata);
+    const resData = await Entity.find(querydata).sort({ _id: -1 });
     res.status(200).json({ status: 200, data: crypto.encrypt(JSON.stringify(resData)) });
   } catch (error) {
     res.status(500).json({ status: 500, message: error });
@@ -72,8 +72,8 @@ entitiesRouter.put('/update-entity-by-id/:id', async (req, res) => {
     const collectionName = req.body.collectionName;
     const entitySchema = req.body.schema;
     const collectionData = req.body.collectionData;
-    const dbUrl = `mongodb://127.0.0.1:27017/${dbName}`;
-    DBURL = DBURL+dbName+"?retryWrites=true&w=majority";
+    const DBURL = `mongodb://127.0.0.1:27017/${dbName}`;
+    // DBURL = DBURL+dbName+"?retryWrites=true&w=majority";
 
     const options = {
       useNewUrlParser: true,
@@ -98,8 +98,8 @@ entitiesRouter.delete('/delete-entity-by-id/:id', async (req, res) => {
     const dbName = req.body.dbName;
     const collectionName = req.body.collectionName;
     const entitySchema = req.body.schema;
-    const dbUrl = `mongodb://127.0.0.1:27017/${dbName}`;
-    DBURL = DBURL+dbName+"?retryWrites=true&w=majority";
+    const DBURL = `mongodb://127.0.0.1:27017/${dbName}`;
+    // DBURL = DBURL+dbName+"?retryWrites=true&w=majority";
 
     const options = {
       useNewUrlParser: true,
