@@ -70,6 +70,40 @@ const serviceFieldsSchema = new mongoose.Schema({
     }
 })
 
+const billingDetailsSchema = new mongoose.Schema({
+    signature: {
+        required: true,
+        type: String,
+    },
+    logo: {
+        required: true,
+        type: String,
+    },
+    company_address: {
+        required: true,
+        type: String,
+    },
+    city: {
+        required: true,
+        type: String,
+    },
+    state: {
+        required: true,
+        type: String,
+    },
+    country: {
+        required: true,
+        type: String,
+    },
+    gstNo: {
+        type: String,
+    },
+    upiId: {
+        required: true,
+        type: String,
+    }
+})
+
 const appMetaSchema = new mongoose.Schema({
     company_name: {
         required: true,
@@ -107,10 +141,7 @@ const appMetaSchema = new mongoose.Schema({
         serviceFieldsSchema
     ],
     billingdetails: {
-        signature: {
-            required: true,
-            type: String,
-        }
+        billingDetailsSchema
     },
     table_fileds: [
         table_fields_schema
