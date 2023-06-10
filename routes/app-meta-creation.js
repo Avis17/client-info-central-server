@@ -53,8 +53,8 @@ router.post("/add-app-new-category", (req, res) => {
 
 router.post("/create-new-app-meta", (req, res) => {
     const options = {
-      useNewUrlParser: true,
-      useUnifiedTopology: true
+        useNewUrlParser: true,
+        useUnifiedTopology: true
     };
     const connection = mongoose.createConnection(DBURL, options);
     const db = connection.useDb('cic');
@@ -89,8 +89,8 @@ router.post("/update-app-meta-by-id", (req, res) => {
     const appMetaModel = req.body.data;
     const filter = { _id: req.body._id };
     const options = {
-      useNewUrlParser: true,
-      useUnifiedTopology: true
+        useNewUrlParser: true,
+        useUnifiedTopology: true
     };
     const connection = mongoose.createConnection(DBURL, options);
     const db = connection.useDb('cic');
