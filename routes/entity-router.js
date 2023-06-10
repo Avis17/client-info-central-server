@@ -5,7 +5,6 @@ const crypto = require("./crypro");
 const { ObjectId } = require('mongoose').Types;
 const moment = require('moment');
 const multer = require('multer');
-const writeConcern = { w: 'majority' };
 
 // Create a multer storage instance
 // const storage = multer.memoryStorage();
@@ -21,10 +20,10 @@ entitiesRouter.post('/', async (req, res) => {
     const entitySchema = req.body.schema;
     const collectionData = req.body.collectionData;
     // const DBURL = `mongodb://127.0.0.1:27017/${dbName}`;
-    DBURL = DBURL + dbName + "?retryWrites=true&w=majority";
+    DBURL = DBURL+dbName+"?retryWrites=true&w=majority";
     const options = {
-      useNewUrlParser: true,
-      useUnifiedTopology: true
+        useNewUrlParser: true,
+        useUnifiedTopology: true
     };
     const connection = mongoose.createConnection(DBURL, options);
     const db = connection.useDb(dbName);
@@ -58,69 +57,46 @@ entitiesRouter.post('/upload-invoice', upload.single('file'), async (req, res) =
     const entitySchema = req.body.schema;
     const collectionData = JSON.parse(req.body.collectionData);
     // const DBURL = `mongodb://127.0.0.1:27017/${dbName}`;
-    DBURL = DBURL + dbName + "?retryWrites=true&w=majority";
-
-    const options = {
-      useNewUrlParser: true,
-      useUnifiedTopology: true
-    };
+    DBURL = DBURL+dbName+"?retryWrites=true&w=majority";
+    const options = {};
     const connection = mongoose.createConnection(DBURL, options);
     const db = connection.useDb(dbName);
     const Entity = db.model(collectionName, new mongoose.Schema({}, { strict: false, timestamps: true }));
-
     // Check if a file was uploaded
     if (!req.file) {
       return res.status(400).json({ status: 400, message: 'No file uploaded' });
     }
-
-    // Check if the entity already exists
-    const entityId = collectionData._id; // Assuming the entity ID is included in the collectionData
-    let existingEntity;
-
-    if (entityId) {
-      existingEntity = await Entity.findById(entityId);
-    }
-
-    // Create a new entity or update the existing one with the file data
-    const updatedEntity = {
+    // Create a new entity with the file data
+    const newEntity = new Entity({
       ...collectionData,
       file: {
         name: req.file.originalname,
         data: req.file.buffer,
         contentType: req.file.mimetype
       }
-    };
-
-    if (existingEntity) {
-      // Update the existing entity
-      existingEntity.set(updatedEntity);
-      await existingEntity.save();
-    } else {
-      // Create a new entity
-      const newEntity = new Entity(updatedEntity);
-      await newEntity.save();
+    });
+    try {
+      const savedEntity = await newEntity.save();
+      // Get the ObjectId of the saved entity
+      const entityId = savedEntity._id;
+      // Generate the file URL
+      const fileURL = `/files/${entityId}/invoice.pdf`; // Customize the file URL path as needed
+      res.status(200).json({ status: 200, data: crypto.encrypt(JSON.stringify(savedEntity)), fileURL });
+    } catch (error) {
+      if (error.code === 11000) {
+        // Duplicate key error
+        return res.status(409).json({
+          status: 409,
+          message: error
+        });
+      }
+      // Handle other errors
+      res.status(400).json({ status: 400, message: error });
     }
-
-    // Return the updated entity or the newly created entity
-    const savedEntity = existingEntity || newEntity;
-
-    // Generate the file URL
-    const fileURL = `/files/${savedEntity._id}/invoice.pdf`; // Customize the file URL path as needed
-
-    res.status(200).json({ status: 200, data: crypto.encrypt(JSON.stringify(savedEntity)), fileURL });
   } catch (error) {
-    if (error.code === 11000) {
-      // Duplicate key error
-      return res.status(409).json({
-        status: 409,
-        message: error
-      });
-    }
-    // Handle other errors
-    res.status(400).json({ status: 400, message: error });
+    res.status(500).json({ status: 500, message: error });
   }
 });
-
 
 // Backend code to handle file download
 
@@ -134,7 +110,7 @@ entitiesRouter.post('/get-all-entities', async (req, res) => {
     const entitySchema = req.body.schema;
     var queryData = req.body.queryData || {}; // Assuming queryData is an object containing the query conditions
     // const DBURL = `mongodb://127.0.0.1:27017/${dbName}`;
-    DBURL = DBURL + dbName + "?retryWrites=true&w=majority";
+    DBURL = DBURL+dbName+"?retryWrites=true&w=majority";
     const options = {
       useNewUrlParser: true,
       useUnifiedTopology: true
@@ -150,11 +126,11 @@ entitiesRouter.post('/get-all-entities', async (req, res) => {
     const connection = mongoose.createConnection(DBURL, options);
     const db = connection.useDb(dbName);
     const Entity = db.model(collectionName, new mongoose.Schema({}, { strict: false, timestamps: true }));
-
-    try {
+   
+    try{
       const resData = await Entity.find(queryData).sort({ _id: -1 });
       res.status(200).json({ status: 200, data: crypto.encrypt(JSON.stringify(resData)) });
-    } catch (error) {
+    }catch (error){
       console.log(error)
     }
 
@@ -177,7 +153,7 @@ entitiesRouter.post('/get-all-aggregates-entities', async (req, res) => {
       }
     }
     // const DBURL = `mongodb://127.0.0.1:27017/${dbName}`;
-    DBURL = DBURL + dbName + "?retryWrites=true&w=majority";
+    DBURL = DBURL+dbName+"?retryWrites=true&w=majority";
 
     const options = {
       useNewUrlParser: true,
@@ -289,7 +265,7 @@ entitiesRouter.post('/get-customer-services-entities', async (req, res) => {
     }
 
     // const DBURL = `mongodb://127.0.0.1:27017/${dbName}`;
-    DBURL = DBURL + dbName + "?retryWrites=true&w=majority";
+    DBURL = DBURL+dbName+"?retryWrites=true&w=majority";
 
     const options = {
       useNewUrlParser: true,
@@ -356,7 +332,7 @@ entitiesRouter.post('/get-chart-datas-for-services', async (req, res) => {
     }
 
     // const DBURL = `mongodb://127.0.0.1:27017/${dbName}`;
-    DBURL = DBURL + dbName + "?retryWrites=true&w=majority";
+    DBURL = DBURL+dbName+"?retryWrites=true&w=majority";
 
     const options = {
       useNewUrlParser: true,
@@ -452,7 +428,7 @@ entitiesRouter.post('/get-expense-profit-datas', async (req, res) => {
     const endDate = queryData?.createdAt?.endDate ? new Date(queryData.createdAt.endDate) : null;
 
     // const DBURL = `mongodb://127.0.0.1:27017/${dbName}`;
-    DBURL = DBURL + dbName + "?retryWrites=true&w=majority";
+    DBURL = DBURL+dbName+"?retryWrites=true&w=majority";
 
     const options = {
       useNewUrlParser: true,
@@ -521,7 +497,7 @@ entitiesRouter.put('/update-entity-by-id/:id', async (req, res) => {
     const entitySchema = req.body.schema;
     const collectionData = req.body.collectionData;
     // const DBURL = `mongodb://127.0.0.1:27017/${dbName}`;
-    DBURL = DBURL + dbName + "?retryWrites=true&w=majority";
+    DBURL = DBURL+dbName+"?retryWrites=true&w=majority";
 
     const options = {
       useNewUrlParser: true,
@@ -547,7 +523,7 @@ entitiesRouter.post('/delete-entity-by-id/:id', async (req, res) => {
     const collectionName = req.body.collectionName;
     const entitySchema = req.body.schema;
     // const DBURL = `mongodb://127.0.0.1:27017/${dbName}`;
-    DBURL = DBURL + dbName + "?retryWrites=true&w=majority";
+    DBURL = DBURL+dbName+"?retryWrites=true&w=majority";
     const options = {
       useNewUrlParser: true,
       useUnifiedTopology: true
