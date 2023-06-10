@@ -3,7 +3,8 @@ const crypto = require("./crypro");
 const AppCategoryModel = require("../models/appcategories");
 const AppMetaModel = require("../models/appmeta");
 const mongoose = require('mongoose');
-var DBURL = "mongodb+srv://pvadivelsiva:client-info-central2023@cluster0.ucunosj.mongodb.net/"
+var DBURL = "mongodb+srv://pvadivelsiva:client-info-central2023@cluster0.ucunosj.mongodb.net/cic?retryWrites=true&w=majority"
+// const DBURL = `mongodb://127.0.0.1:27017/cic`;
 
 router.get("/get-app-categories", (req, res) => {
     AppCategoryModel.find({}).then((result) => {
@@ -51,8 +52,15 @@ router.post("/add-app-new-category", (req, res) => {
 
 
 router.post("/create-new-app-meta", (req, res) => {
-    const appMetaModel = new AppMetaModel(req.body);
-    appMetaModel.save().then((result) => {
+    const options = {
+      useNewUrlParser: true,
+      useUnifiedTopology: true
+    };
+    const connection = mongoose.createConnection(DBURL, options);
+    const db = connection.useDb('cic');
+    const Entity = db.model('app_meta_objects', new mongoose.Schema({}, { strict: false, timestamps: true }));
+    const newEntity = new Entity(req.body);
+    newEntity.save().then((result) => {
         res.send({
             status: 200,
             message: 'success',
@@ -80,9 +88,6 @@ router.post("/create-new-app-meta", (req, res) => {
 router.post("/update-app-meta-by-id", (req, res) => {
     const appMetaModel = req.body.data;
     const filter = { _id: req.body._id };
-    // const DBURL = `mongodb://127.0.0.1:27017/cic`;
-    DBURL = DBURL+'cic'+"?retryWrites=true&w=majority";
-
     const options = {
       useNewUrlParser: true,
       useUnifiedTopology: true
