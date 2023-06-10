@@ -5,7 +5,7 @@ const crypto = require("./crypro");
 const { ObjectId } = require('mongoose').Types;
 const moment = require('moment');
 const multer = require('multer');
-const options = { maxTimeMS: 30000 }; // Increase the timeout to 30 seconds
+const agg_options = { maxTimeMS: 30000 }; // Increase the timeout to 30 seconds
 
 // Create a multer storage instance
 // const storage = multer.memoryStorage();
@@ -233,7 +233,7 @@ entitiesRouter.post('/get-all-aggregates-entities', async (req, res) => {
     ];
 
 
-    const customersData = await Customer.aggregate(aggregationPipeline, options);
+    const customersData = await Customer.aggregate(aggregationPipeline, agg_options);
     const result = {
       customersList: customersData[0]?.customersList || [],
       invoicesList: customersData[0]?.invoicesList || [],
@@ -287,7 +287,7 @@ entitiesRouter.post('/get-customer-services-entities', async (req, res) => {
         { $sort: { createdAt: -1 } }, // Sort customers in descending order based on createdAt field
         { $group: { _id: null, customers: { $push: "$$ROOT" }, noOfCustomers: { $sum: 1 } } },
         { $project: { _id: 0, customers: 1, noOfCustomers: 1 } },
-      ], options).exec(),
+      ], agg_options).exec(),
       Invoice.aggregate([
         { $match: queryData },
         {
@@ -300,7 +300,7 @@ entitiesRouter.post('/get-customer-services-entities', async (req, res) => {
           }
         },
         { $project: { _id: 0, invoicesList: 1, productsList: 1, noOfProducts: 1, totalRevenue: 1 } }
-      ], options).exec()
+      ], agg_options).exec()
     ]);
 
     // Construct the final response
@@ -376,7 +376,7 @@ entitiesRouter.post('/get-chart-datas-for-services', async (req, res) => {
     ];
 
     try {
-      const invoiceCountData = await Invoice.aggregate(invoiceCountPipeline, options).exec();
+      const invoiceCountData = await Invoice.aggregate(invoiceCountPipeline, agg_options).exec();
       const highestInvoiceDayOfWeek = invoiceCountData.length > 0 ? invoiceCountData[0]._id.dayOfWeek : null;
 
       // Calculate idle days
@@ -398,7 +398,7 @@ entitiesRouter.post('/get-chart-datas-for-services', async (req, res) => {
         }
       ];
 
-      const invoiceDates = await Invoice.aggregate(idleDaysPipeline,options).exec();
+      const invoiceDates = await Invoice.aggregate(idleDaysPipeline, agg_options).exec();
       const totalDays = Math.floor((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
       const invoiceDatesSet = new Set(invoiceDates.map((invoice) => invoice._id.date));
       let idleDays = 0;
@@ -481,8 +481,8 @@ entitiesRouter.post('/get-expense-profit-datas', async (req, res) => {
     });
 
     const [expensesResult, invoicesResult] = await Promise.all([
-      Expense.aggregate(expensesPipeline,options),
-      Invoice.aggregate(invoicesPipeline, options)
+      Expense.aggregate(expensesPipeline, agg_options),
+      Invoice.aggregate(invoicesPipeline, agg_options)
     ]);
 
     const totalExpenses = expensesResult.length > 0 ? expensesResult[0].totalExpenses : 0;
