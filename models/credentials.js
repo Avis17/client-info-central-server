@@ -12,6 +12,14 @@ const authSchema = new mongoose.Schema({
             return validator.isEmail(value);
         }
     },
+    companyEmail: {
+        required : false,
+        type:String,
+        lowercase: true,
+        validate: (value) => {
+            return validator.isEmail(value);
+        }
+    },
     password: {
         required : true,
         type:String
@@ -20,6 +28,11 @@ const authSchema = new mongoose.Schema({
         required : true,
         type:String,
         default : "developer"
+    },
+    permission : {
+        required : false,
+        type:String,
+        default : "default"
     },
     token: { 
         type: String 

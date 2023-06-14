@@ -1,3 +1,5 @@
+require('dotenv').config(); // Load environmental variables from .env file
+
 const express = require('express');
 const entitiesRouter = express.Router();
 const mongoose = require('mongoose');
@@ -11,7 +13,17 @@ const agg_options = { maxTimeMS: 30000 }; // Increase the timeout to 30 seconds
 // const storage = multer.memoryStorage();
 const upload = multer();
 
-var DBURL = "mongodb+srv://pvadivelsiva:client-info-central2023@cluster0.ucunosj.mongodb.net/"
+// Create a connection pool
+const poolSize = 10; // Maximum number of connections in the pool
+const poolOptions = {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+};
+// const DBURL = process.env.DB_URL_LOCAL || 'mongodb://127.0.0.1:27017/';
+const DBURL = process.env.DB_URL_PROD || "mongodb+srv://pvadivelsiva:client-info-central2023@cluster0.ucunosj.mongodb.net/?retryWrites=true&w=majority";
+
+const connectionPool = mongoose.createConnection(DBURL, poolOptions);
+
 
 // Create an entity
 entitiesRouter.post('/', async (req, res) => {
@@ -20,14 +32,7 @@ entitiesRouter.post('/', async (req, res) => {
     const collectionName = req.body.collectionName;
     const entitySchema = req.body.schema;
     const collectionData = req.body.collectionData;
-    // const DBURL = `mongodb://127.0.0.1:27017/${dbName}`;
-    DBURL = DBURL + dbName + "?retryWrites=true&w=majority";
-    const options = {
-      useNewUrlParser: true,
-      useUnifiedTopology: true
-    };
-    const connection = mongoose.createConnection(DBURL, options);
-    const db = connection.useDb(dbName);
+    const db = connectionPool.useDb(dbName);
     const Entity = db.model(collectionName, new mongoose.Schema({}, { strict: false, timestamps: true }));
     const newEntity = new Entity(collectionData);
     try {
@@ -51,59 +56,6 @@ entitiesRouter.post('/', async (req, res) => {
   }
 });
 
-entitiesRouter.post('/upload-invoice', upload.single('file'), async (req, res) => {
-  try {
-    const dbName = req.body.dbName;
-    const collectionName = req.body.collectionName;
-    const entitySchema = req.body.schema;
-    const collectionData = JSON.parse(req.body.collectionData);
-    // const DBURL = `mongodb://127.0.0.1:27017/${dbName}`;
-    DBURL = DBURL + dbName + "?retryWrites=true&w=majority";
-    const options = {
-      useNewUrlParser: true,
-      useUnifiedTopology: true
-    };
-    const connection = mongoose.createConnection(DBURL, options);
-    const db = connection.useDb(dbName);
-    const Entity = db.model(collectionName, new mongoose.Schema({}, { strict: false, timestamps: true }));
-    // Check if a file was uploaded
-    if (!req.file) {
-      return res.status(400).json({ status: 400, message: 'No file uploaded' });
-    }
-    // Create a new entity with the file data
-    const newEntity = new Entity({
-      ...collectionData,
-      file: {
-        name: req.file.originalname,
-        data: req.file.buffer,
-        contentType: req.file.mimetype
-      }
-    });
-    try {
-      const savedEntity = await newEntity.save();
-      // Get the ObjectId of the saved entity
-      const entityId = savedEntity._id;
-      // Generate the file URL
-      const fileURL = `/files/${entityId}/invoice.pdf`; // Customize the file URL path as needed
-      res.status(200).json({ status: 200, data: crypto.encrypt(JSON.stringify(savedEntity)), fileURL });
-    } catch (error) {
-      if (error.code === 11000) {
-        // Duplicate key error
-        return res.status(409).json({
-          status: 409,
-          message: error
-        });
-      }
-      // Handle other errors
-      res.status(400).json({ status: 400, message: error });
-    }
-  } catch (error) {
-    res.status(500).json({ status: 500, message: error });
-  }
-});
-
-// Backend code to handle file download
-
 
 
 // Read all entities
@@ -113,12 +65,6 @@ entitiesRouter.post('/get-all-entities', async (req, res) => {
     const collectionName = req.body.collectionName;
     const entitySchema = req.body.schema;
     var queryData = req.body.queryData || {}; // Assuming queryData is an object containing the query conditions
-    // const DBURL = `mongodb://127.0.0.1:27017/${dbName}`;
-    DBURL = DBURL + dbName + "?retryWrites=true&w=majority";
-    const options = {
-      useNewUrlParser: true,
-      useUnifiedTopology: true
-    };
     if (queryData?.createdAt) {
       let startDate = new Date(queryData.createdAt.startDate);
       let endDate = new Date(queryData.createdAt.endDate);
@@ -127,12 +73,12 @@ entitiesRouter.post('/get-all-entities', async (req, res) => {
         $lte: endDate
       };
     }
-    const connection = mongoose.createConnection(DBURL, options);
-    const db = connection.useDb(dbName);
+    const db = connectionPool.useDb(dbName);
+
     const Entity = db.model(collectionName, new mongoose.Schema({}, { strict: false, timestamps: true }));
 
     try {
-      const resData = await Entity.find(queryData).sort({ _id: -1 });
+      const resData = await Entity.find(queryData).sort({ createdAt: -1 });
       res.status(200).json({ status: 200, data: crypto.encrypt(JSON.stringify(resData)) });
     } catch (error) {
       console.log(error)
@@ -156,15 +102,8 @@ entitiesRouter.post('/get-all-aggregates-entities', async (req, res) => {
         }
       }
     }
-    // const DBURL = `mongodb://127.0.0.1:27017/${dbName}`;
-    DBURL = DBURL + dbName + "?retryWrites=true&w=majority";
+    const db = connectionPool.useDb(dbName);
 
-    const options = {
-      useNewUrlParser: true,
-      useUnifiedTopology: true
-    };
-    const connection = mongoose.createConnection(DBURL, options);
-    const db = connection.useDb(dbName);
     const Customer = db.model('customers', new mongoose.Schema({}, { strict: false, timestamps: true }));
     const Invoice = db.model('invoices', new mongoose.Schema({}, { strict: false, timestamps: true }));
 
@@ -268,15 +207,8 @@ entitiesRouter.post('/get-customer-services-entities', async (req, res) => {
       };
     }
 
-    // const DBURL = `mongodb://127.0.0.1:27017/${dbName}`;
-    DBURL = DBURL + dbName + "?retryWrites=true&w=majority";
+    const db = connectionPool.useDb(dbName);
 
-    const options = {
-      useNewUrlParser: true,
-      useUnifiedTopology: true
-    };
-    const connection = mongoose.createConnection(DBURL, options);
-    const db = connection.useDb(dbName);
     const Customer = db.model('customers', new mongoose.Schema({}, { strict: false, timestamps: true }));
     const Invoice = db.model('invoices', new mongoose.Schema({}, { strict: false, timestamps: true }));
 
@@ -318,6 +250,7 @@ entitiesRouter.post('/get-customer-services-entities', async (req, res) => {
   }
 });
 
+
 entitiesRouter.post('/get-chart-datas-for-services', async (req, res) => {
   try {
     const dbName = req.body.dbName;
@@ -334,20 +267,12 @@ entitiesRouter.post('/get-chart-datas-for-services', async (req, res) => {
     if (isNaN(startDate) || isNaN(endDate)) {
       throw new Error("Invalid startDate or endDate format.");
     }
+    const db = connectionPool.useDb(dbName);
 
-    // const DBURL = `mongodb://127.0.0.1:27017/${dbName}`;
-    DBURL = DBURL + dbName + "?retryWrites=true&w=majority";
-
-    const options = {
-      useNewUrlParser: true,
-      useUnifiedTopology: true
-    };
-    const connection = mongoose.createConnection(DBURL, options);
-    const db = connection.useDb(dbName);
     const Invoice = db.model('invoices', new mongoose.Schema({}, { strict: false, timestamps: true }));
 
     // Query to get the count of invoices generated on each day
-    const invoiceCountPipeline = [
+    const pipeline = [
       {
         $match: {
           createdAt: {
@@ -362,12 +287,13 @@ entitiesRouter.post('/get-chart-datas-for-services', async (req, res) => {
             date: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
             dayOfWeek: { $dayOfWeek: "$createdAt" }
           },
-          count: { $sum: 1 }
+          count: { $sum: 1 },
+          totalRevenue: { $sum: "$finalTotal" } // Use "finalTotal" field to calculate the revenue
         }
       },
       {
         $sort: {
-          count: -1
+          totalRevenue: -1 // Sort by totalRevenue in descending order
         }
       },
       {
@@ -376,8 +302,10 @@ entitiesRouter.post('/get-chart-datas-for-services', async (req, res) => {
     ];
 
     try {
-      const invoiceCountData = await Invoice.aggregate(invoiceCountPipeline, agg_options).exec();
+      const invoiceCountData = await Invoice.aggregate(pipeline, agg_options).exec();
       const highestInvoiceDayOfWeek = invoiceCountData.length > 0 ? invoiceCountData[0]._id.dayOfWeek : null;
+      const highestRevenueDate = invoiceCountData.length > 0 ? formatDate(invoiceCountData[0]._id.date) : null;
+      const highestRevenueAmount = invoiceCountData.length > 0 ? invoiceCountData[0].totalRevenue : 0;
 
       // Calculate idle days
       const idleDaysPipeline = [
@@ -413,7 +341,7 @@ entitiesRouter.post('/get-chart-datas-for-services', async (req, res) => {
         }
       }
 
-      res.status(200).json({ status: 200, data: crypto.encrypt(JSON.stringify({ idleDays, highestInvoiceDayOfWeek })) });
+      res.status(200).json({ status: 200, data: crypto.encrypt(JSON.stringify({ idleDays, highestInvoiceDayOfWeek, highestRevenueDate, highestRevenueAmount })) });
     } catch (error) {
       res.status(500).json({ status: 500, message: error.message });
     }
@@ -421,6 +349,8 @@ entitiesRouter.post('/get-chart-datas-for-services', async (req, res) => {
     res.status(500).json({ status: 500, message: error.message });
   }
 });
+
+
 
 entitiesRouter.post('/get-expense-profit-datas', async (req, res) => {
   try {
@@ -431,15 +361,8 @@ entitiesRouter.post('/get-expense-profit-datas', async (req, res) => {
     const startDate = queryData?.createdAt?.startDate ? new Date(queryData.createdAt.startDate) : null;
     const endDate = queryData?.createdAt?.endDate ? new Date(queryData.createdAt.endDate) : null;
 
-    // const DBURL = `mongodb://127.0.0.1:27017/${dbName}`;
-    DBURL = DBURL + dbName + "?retryWrites=true&w=majority";
+    const db = connectionPool.useDb(dbName);
 
-    const options = {
-      useNewUrlParser: true,
-      useUnifiedTopology: true
-    };
-    const connection = mongoose.createConnection(DBURL, options);
-    const db = connection.useDb(dbName);
     const Expense = db.model('expenses', new mongoose.Schema({}, { strict: false, timestamps: true }));
     const Invoice = db.model('invoices', new mongoose.Schema({}, { strict: false, timestamps: true }));
 
@@ -500,15 +423,8 @@ entitiesRouter.put('/update-entity-by-id/:id', async (req, res) => {
     const collectionName = req.body.collectionName;
     const entitySchema = req.body.schema;
     const collectionData = req.body.collectionData;
-    // const DBURL = `mongodb://127.0.0.1:27017/${dbName}`;
-    DBURL = DBURL + dbName + "?retryWrites=true&w=majority";
+    const db = connectionPool.useDb(dbName);
 
-    const options = {
-      useNewUrlParser: true,
-      useUnifiedTopology: true
-    };
-    const connection = mongoose.createConnection(DBURL, options);
-    const db = connection.useDb(dbName);
     const Entity = db.model(collectionName, new mongoose.Schema({}, { strict: false, timestamps: true }));
     const resData = await Entity.findByIdAndUpdate(req.params.id, collectionData, { new: true });
     if (!resData) {
@@ -526,14 +442,8 @@ entitiesRouter.post('/delete-entity-by-id/:id', async (req, res) => {
     const dbName = req.body.dbName;
     const collectionName = req.body.collectionName;
     const entitySchema = req.body.schema;
-    // const DBURL = `mongodb://127.0.0.1:27017/${dbName}`;
-    DBURL = DBURL + dbName + "?retryWrites=true&w=majority";
-    const options = {
-      useNewUrlParser: true,
-      useUnifiedTopology: true
-    };
-    const connection = mongoose.createConnection(DBURL, options);
-    const db = connection.useDb(dbName);
+    const db = connectionPool.useDb(dbName);
+
     const Entity = db.model(collectionName, new mongoose.Schema({}, { strict: false, timestamps: true }));
 
     Entity.findByIdAndDelete(req.params.id)
@@ -552,5 +462,13 @@ entitiesRouter.post('/delete-entity-by-id/:id', async (req, res) => {
     res.status(500).json({ status: 500, message: error });
   }
 });
+
+function formatDate(dateStr) {
+  const date = new Date(dateStr);
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = String(date.getFullYear()).slice(-2);
+  return `${day}-${month}-${year}`;
+}
 
 module.exports = entitiesRouter;
