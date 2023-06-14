@@ -78,7 +78,7 @@ entitiesRouter.post('/get-all-entities', async (req, res) => {
     const Entity = db.model(collectionName, new mongoose.Schema({}, { strict: false, timestamps: true }));
 
     try {
-      const resData = await Entity.find(queryData).sort({ _id: -1 });
+      const resData = await Entity.find(queryData).sort({ createdAt: -1 });
       res.status(200).json({ status: 200, data: crypto.encrypt(JSON.stringify(resData)) });
     } catch (error) {
       console.log(error)
@@ -249,102 +249,6 @@ entitiesRouter.post('/get-customer-services-entities', async (req, res) => {
     res.status(500).json({ status: 500, message: error });
   }
 });
-
-// entitiesRouter.post('/get-chart-datas-for-services', async (req, res) => {
-//   try {
-//     const dbName = req.body.dbName;
-//     const collectionName = req.body.collectionName;
-//     let queryData = req.body.queryData; // Assuming queryData is an object containing the query conditions
-
-//     if (!queryData.createdAt || !queryData.createdAt.startDate || !queryData.createdAt.endDate) {
-//       throw new Error("Invalid query data. Missing startDate or endDate.");
-//     }
-
-//     const startDate = new Date(queryData.createdAt.startDate);
-//     const endDate = new Date(queryData.createdAt.endDate);
-
-//     if (isNaN(startDate) || isNaN(endDate)) {
-//       throw new Error("Invalid startDate or endDate format.");
-//     }
-//     const db = connectionPool.useDb(dbName);
-
-//     const Invoice = db.model('invoices', new mongoose.Schema({}, { strict: false, timestamps: true }));
-
-//     // Query to get the count of invoices generated on each day
-//     const invoiceCountPipeline = [
-//       {
-//         $match: {
-//           createdAt: {
-//             $gte: startDate,
-//             $lte: endDate
-//           }
-//         }
-//       },
-//       {
-//         $group: {
-//           _id: {
-//             date: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
-//             dayOfWeek: { $dayOfWeek: "$createdAt" }
-//           },
-//           count: { $sum: 1 }
-//         }
-//       },
-//       {
-//         $sort: {
-//           count: -1
-//         }
-//       },
-//       {
-//         $limit: 1
-//       }
-//     ];
-
-//     try {
-//       const invoiceCountData = await Invoice.aggregate(invoiceCountPipeline, agg_options).exec();
-//       const highestInvoiceDayOfWeek = invoiceCountData.length > 0 ? invoiceCountData[0]._id.dayOfWeek : null;
-
-//       // Calculate idle days
-//       const idleDaysPipeline = [
-//         {
-//           $match: {
-//             createdAt: {
-//               $gte: startDate,
-//               $lte: endDate
-//             }
-//           }
-//         },
-//         {
-//           $group: {
-//             _id: {
-//               date: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } }
-//             }
-//           }
-//         }
-//       ];
-
-//       const invoiceDates = await Invoice.aggregate(idleDaysPipeline, agg_options).exec();
-//       const totalDays = Math.floor((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
-//       const invoiceDatesSet = new Set(invoiceDates.map((invoice) => invoice._id.date));
-//       let idleDays = 0;
-
-//       for (let i = 0; i < totalDays; i++) {
-//         const currentDate = new Date(startDate);
-//         currentDate.setDate(currentDate.getDate() + i);
-//         const currentDateStr = currentDate.toISOString().split('T')[0];
-
-//         if (!invoiceDatesSet.has(currentDateStr)) {
-//           idleDays++;
-//         }
-//       }
-
-//       res.status(200).json({ status: 200, data: crypto.encrypt(JSON.stringify({ idleDays, highestInvoiceDayOfWeek })) });
-//     } catch (error) {
-//       res.status(500).json({ status: 500, message: error.message });
-//     }
-//   } catch (error) {
-//     res.status(500).json({ status: 500, message: error.message });
-//   }
-// });
 
 
 entitiesRouter.post('/get-chart-datas-for-services', async (req, res) => {
