@@ -91,7 +91,7 @@ if (cluster.isMaster) {
 
   // Catch-all route for invalid routes
   app.use((req, res, next) => {
-    res.redirect('/'); // Redirect to the login route
+    res.sendFile(path.join(public, 'index.html'));
   });
   
   app.listen(PORT, () => {
