@@ -48,7 +48,7 @@ if (cluster.isMaster) {
     });
 
   app.get('/', (req, res) => {
-    res.sendFile(path.join(public, 'index.html'));
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
   });
 
   app.get('/files/:dbName/:collectionName/:entityId/download', async (req, res) => {
@@ -85,14 +85,17 @@ if (cluster.isMaster) {
     }
   });
 
+  app.use((req, res, next) => {
+    if (req.path === '/dashboard') {
+      res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    }else {
+      next(); // Pass control to the next middleware/route handler
+    }
+  });
+
   app.use(authMiddleware);
   app.use('/app-meta-creation', appMetaCreaton);
   app.use('/entities', entitiesRouter);
-
-  // Catch-all route for invalid routes
-  app.use((req, res, next) => {
-    res.sendFile(path.join(public, 'index.html'));
-  });
   
   app.listen(PORT, () => {
     console.log(`Worker ${process.pid} is running on PORT ${PORT}`);
