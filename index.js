@@ -6,6 +6,7 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const authenticationRoute = require('./routes/authentication');
 const appMetaCreaton = require('./routes/app-meta-creation');
+const wfmEntityRouter = require("./routes/workforce/wfm-entity")
 const authMiddleware = require('./middlewares/authMiddleware');
 const PORT = process.env.PORT || 2000;
 const mongo = require('./utils/dao');
@@ -48,6 +49,7 @@ if (cluster.isMaster) {
     });
 
   app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
   });
 
@@ -95,6 +97,7 @@ if (cluster.isMaster) {
 
   app.use(authMiddleware);
   app.use('/app-meta-creation', appMetaCreaton);
+  app.use('/app/wfm/v1/entities', wfmEntityRouter);
   app.use('/entities', entitiesRouter);
   
   app.listen(PORT, () => {
