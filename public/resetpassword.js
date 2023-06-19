@@ -1,5 +1,6 @@
 document.addEventListener('DOMContentLoaded', function () {
     const resetForm = document.getElementById('resetForm');
+    const msg = document.getElementById('msg');
     const newPasswordInput = resetForm.elements.newPassword;
     const confirmPasswordInput = resetForm.elements.confirmPassword;
     const successMessage = document.getElementById('successMessage');
@@ -47,6 +48,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         successMessage.classList.remove('d-none');
         resetForm.reset();
+        msg.classList.add('d-none')
       })
       .catch(error => {
         console.error(error);
