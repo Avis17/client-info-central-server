@@ -36,6 +36,12 @@ const authSchema = new mongoose.Schema({
     },
     token: { 
         type: String 
+    },
+    resetToken : {
+        type: String  
+    },
+    resetTokenExpires : {
+        type: Date  
     }
   }, { timestamps: true });
 
