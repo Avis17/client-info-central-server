@@ -9,6 +9,9 @@ const nodemailer = require('nodemailer');
 const { v4: uuidv4 } = require('uuid');
 const ActiveUsers = require('../models/activeUser'); // Import the activeUser model
 const cron = require('node-cron');
+const nodemailer = require('nodemailer');
+const { v4: uuidv4 } = require('uuid');
+const ActiveUsers = require('../models/activeUser'); // Import the activeUser model
 
 const authentiaction = require("../models/credentials");
 const AppMetaModel = require("../models/appmeta");

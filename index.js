@@ -51,50 +51,19 @@ if (cluster.isMaster) {
   app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
   });
-
-  app.get('/files/:dbName/:collectionName/:entityId/download', async (req, res) => {
-    try {
-      const dbName = req.params.dbName;
-      const collectionName = req.params.collectionName;
-      const entityId = req.params.entityId;
-
-      // Connect to the MongoDB database
-      const connection = mongoose.createConnection(`mongodb://127.0.0.1:27017/${dbName}`);
-      const db = connection.useDb(dbName);
-      const Entity = db.model(collectionName, new mongoose.Schema({}, { strict: false, timestamps: true }));
-
-      // Retrieve the entity from the collection using the entityId
-      const entity = await Entity.findById({ _id: entityId });
-
-      if (!entity) {
-        return res.status(404).json({ status: 404, message: 'Entity not found' });
-      }
-
-      const fileData = entity.file;
-
-      // Set the appropriate headers for the file download
-      res.set({
-        'Content-Disposition': `attachment; filename=${fileData.name}`,
-        'Content-Type': fileData.contentType,
-      });
-
-      // Send the file buffer as the response
-      res.send(fileData.data.buffer);
-    } catch (error) {
-      console.error('Error:', error);
-      res.status(500).json({ status: 500, message: 'Internal server error' });
-    }
+  app.get('/reset-password', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'resetpassword.html'));
   });
 
   app.use((req, res, next) => {
-    if (req.path === '/dashboard') {
+    if(req.path === '/dashboard' || req.path === '/forgot-password') {
       res.sendFile(path.join(__dirname, 'public', 'index.html'));
     }else {
+      app.use(authMiddleware);
       next(); // Pass control to the next middleware/route handler
     }
   });
 
-  app.use(authMiddleware);
   app.use('/app-meta-creation', appMetaCreaton);
   app.use('/app/wfm/v1/entities', wfmEntityRouter);
   app.use('/entities', entitiesRouter);
