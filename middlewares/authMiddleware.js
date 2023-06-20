@@ -1,7 +1,7 @@
 // authMiddleware.js
 
 const jwt = require('jsonwebtoken');
-const secretKey = 'clent-info-central-2023-secret-key-siva'; 
+const secretKey = process.env.DB_SECRET_KEY;
 
 const authMiddleware = (req, res, next) => {
   const token = req.headers.authorization;

@@ -1,12 +1,11 @@
 
 const CryptoJS = require("crypto-js");
-const secretKey = 'clent-info-central-2023-secret-key-siva'; 
+const secretKey = process.env.DB_SECRET_KEY;
 
 
 
 const encrypt = (dataStr)=>{
     return CryptoJS.AES.encrypt(dataStr, secretKey).toString();
-
 }
 
 const decrypt = (ciphertext)=>{
