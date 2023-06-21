@@ -17,22 +17,9 @@ const AppMetaModel = require("../models/appmeta");
 // Function to clear inactive users
 const clearInactiveUsers = async () => {
   try {
-    const batchSize = 100; // Number of users to delete in each batch
     const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000); // 30 minutes ago
-    let deletedCount = 0;
-    while (true) {
-      const result = await ActiveUsers.deleteMany(
-        { createdAt: { $lt: thirtyMinutesAgo } },
-        { limit: batchSize }
-      );
-      deletedCount += result.deletedCount;
-      if (result.deletedCount < batchSize) {
-        // If the number of deleted users is less than the batch size,
-        // it means there are no more inactive users to delete
-        break;
-      }
-    }
-    console.log(`Cleared ${deletedCount} inactive users`);
+    await ActiveUsers.deleteMany({ createdAt: { $lt: thirtyMinutesAgo } });
+    console.log('Cleared inactive users');
   } catch (error) {
     console.error(`Error clearing inactive users: ${error}`);
   }
