@@ -6,7 +6,7 @@ const activeUserSchema = new mongoose.Schema({
     required: true,
     unique: true,
   },
-});
+}, { timestamps: true });
 
 const ActiveUser = mongoose.model('ActiveUser', activeUserSchema);
 
