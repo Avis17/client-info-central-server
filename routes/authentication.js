@@ -26,7 +26,7 @@ const clearInactiveUsers = async () => {
 };
 
 // Schedule the task to run every 10 minutes
-cron.schedule('*/2 * * * *', () => {
+cron.schedule('*/10 * * * *', () => {
   clearInactiveUsers();
 });
 
