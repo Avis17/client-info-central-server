@@ -63,7 +63,7 @@ if (cluster.isMaster) {
       next(); // Pass control to the next middleware/route handler
     }
   });
-
+  app.use(authMiddleware);
   app.use('/app-meta-creation', appMetaCreaton);
   app.use('/app/wfm/v1/entities', wfmEntityRouter);
   app.use('/entities', entitiesRouter);

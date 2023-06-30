@@ -61,7 +61,6 @@ router.post("/add-app-new-category", (req, res) => {
 router.post("/create-new-app-meta", (req, res) => {
 
     const db = connectionPool.useDb(DBNAME);
-
     const Entity = db.model('app_meta_objects', new mongoose.Schema({}, { strict: false, timestamps: true }));
     const newEntity = new Entity(req.body);
     newEntity.save().then((result) => {

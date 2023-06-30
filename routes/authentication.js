@@ -8,9 +8,28 @@ const crypto = require("./crypro");
 const nodemailer = require('nodemailer');
 const { v4: uuidv4 } = require('uuid');
 const ActiveUsers = require('../models/activeUser'); // Import the activeUser model
+const cron = require('node-cron');
 
 const authentiaction = require("../models/credentials");
 const AppMetaModel = require("../models/appmeta");
+
+
+// Function to clear inactive users
+const clearInactiveUsers = async () => {
+  try {
+    const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000); // 30 minutes ago
+    await ActiveUsers.deleteMany({ createdAt: { $lt: thirtyMinutesAgo } });
+    console.log('Cleared inactive users');
+  } catch (error) {
+    console.error(`Error clearing inactive users: ${error}`);
+  }
+};
+
+// Schedule the task to run every 10 minutes
+cron.schedule('*/10 * * * *', () => {
+  clearInactiveUsers();
+});
+
 
 router.post("/login", async (req, res) => {
     if (req.body) {
