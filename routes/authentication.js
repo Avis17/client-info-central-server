@@ -5,10 +5,10 @@ const saltRounds = 10;
 const jwt = require('jsonwebtoken');
 const secretKey = process.env.DB_SECRET_KEY;
 const crypto = require("./crypro");
-const cron = require('node-cron');
 const nodemailer = require('nodemailer');
 const { v4: uuidv4 } = require('uuid');
 const ActiveUsers = require('../models/activeUser'); // Import the activeUser model
+const cron = require('node-cron');
 
 const authentiaction = require("../models/credentials");
 const AppMetaModel = require("../models/appmeta");
