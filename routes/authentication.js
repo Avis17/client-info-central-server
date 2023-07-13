@@ -179,7 +179,7 @@ router.post('/forgot-password', async (req, res) => {
       from: 'kuattechnologies@gmail.com',
       to: email,
       subject: 'Password Reset',
-      text: `To reset your password, click on the following link: ${resetUrl}`,
+      text: `To reset your password, please click on the following link. Kindly note that the link will expire after 1 hour: ${resetUrl}`,
     };
 
     transporter.sendMail(mailOptions, (error) => {
