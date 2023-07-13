@@ -39,6 +39,8 @@ entitiesRouter.post('/', async (req, res) => {
       const savedEntity = await newEntity.save();
       res.status(200).json({ status: 200, data: crypto.encrypt(JSON.stringify(savedEntity)) });
     } catch (error) {
+      console.log("hello")
+      console.log(error);
       if (error.code === 11000) {
         // Duplicate key error
         return res.status(409).json({
@@ -85,6 +87,114 @@ entitiesRouter.post('/get-all-entities', async (req, res) => {
     }
 
   } catch (error) {
+    res.status(500).json({ status: 500, message: error });
+  }
+});
+
+
+entitiesRouter.post('/get-employee-aggregates-entities', async (req, res) => {
+  try {
+    const dbName = req.body.dbName;
+    const collectionName = req.body.collectionName;
+    var queryData = req.body.queryData || {};
+    const db = connectionPool.useDb(dbName);
+    const Employee = db.model('employees', new mongoose.Schema({}, { strict: false, timestamps: true }));
+    const Payslip = db.model('employee-payslips', new mongoose.Schema({}, { strict: false, timestamps: true }));
+    const Attendance = db.model('employee-attendance', new mongoose.Schema({}, { strict: false, timestamps: true }));
+
+    var queryData = req.body.queryData || {};
+    if (queryData?.createdAt) {
+      let startDate = new Date(queryData.createdAt.startDate);
+      let endDate = new Date(queryData.createdAt.endDate);
+      queryData.createdAt = {
+        $gte: startDate,
+        $lte: endDate
+      };
+    }
+    const activeEmployees = await Employee.countDocuments({ ...queryData, status: 'active' });
+    const resignedEmployees = await Employee.countDocuments({ ...queryData, status: 'resigned' });
+    const partTimeEmployees = await Employee.countDocuments({ ...queryData, status: 'Part-Time' });
+    const totalPayslips = await Payslip.countDocuments(queryData);
+    const payslips = await Payslip.find(queryData, { "payslipDetails.netSalary": 1, "payslipDetails.tax": 1, "payslipDetails.pf": 1 });
+    let totalNetSalaryGiven = 0;
+    let totalTax = 0;
+    let totalPF = 0;
+    payslips.forEach((payslip) => {
+      totalNetSalaryGiven += parseFloat(payslip.payslipDetails.netSalary);
+      totalTax += parseFloat(payslip.payslipDetails.tax);
+      totalPF += parseFloat(payslip.payslipDetails.pf);
+    });
+    const result = {
+      totalEmployees: activeEmployees + resignedEmployees + partTimeEmployees,
+      activeEmployees,
+      resignedEmployees,
+      partTimeEmployees,
+      totalPayslips,
+      totalNetSalaryGiven,
+      totalTax,
+      totalPF
+    };
+    res.status(200).json({ status: 200, data: crypto.encrypt(JSON.stringify(result)) });
+  } catch (error) {
+    res.status(500).json({ status: 500, message: error });
+  }
+});
+
+entitiesRouter.post('/get-month-invoice-data', async (req, res) => {
+  try {
+    const dbName = req.body.dbName;
+    const collectionName = req.body.collectionName;
+    const entitySchema = req.body.schema;
+    var queryData = req.body.queryData || {}; // Assuming queryData is an object containing the query conditions
+    if (queryData?.createdAt) {
+      let startDate = new Date(queryData.createdAt.startDate);
+      let endDate = new Date(queryData.createdAt.endDate);
+      queryData.createdAt = {
+        $gte: startDate,
+        $lte: endDate
+      };
+    }
+    const db = connectionPool.useDb(dbName);
+    const Invoice = db.model('invoices', new mongoose.Schema({}, { strict: false, timestamps: true }));
+    const aggregationPipeline = [
+      {
+        $match: queryData
+      },
+      {
+        $group: {
+          _id: {
+            $dateToString: {
+              format: "%m, %Y",
+              date: "$createdAt"
+            }
+          },
+          amount: {
+            $sum: "$finalTotal"
+          }
+        }
+      },
+      {
+        $sort: {
+          "_id": 1
+        }
+      },
+      {
+        $project: {
+          _id: 0,
+          month: "$_id",
+          amount: 1
+        }
+      }
+    ];
+    try{
+      const result = await Invoice.aggregate(aggregationPipeline);
+      res.status(200).json({ status: 200, data: crypto.encrypt(JSON.stringify(result)) });
+    }catch(err){
+      console.log(err)
+    }
+    
+  } catch (error) {
+    console.log(error)
     res.status(500).json({ status: 500, message: error });
   }
 });
