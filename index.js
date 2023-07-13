@@ -42,10 +42,10 @@ if (cluster.isMaster) {
   mongo
     .connect()
     .then((result) => {
-      console.log(result);
+      // console.log(result);
     })
     .catch((err) => {
-      console.log(err);
+      // console.log(err);
     });
 
   app.get('/', (req, res) => {

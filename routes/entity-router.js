@@ -39,8 +39,6 @@ entitiesRouter.post('/', async (req, res) => {
       const savedEntity = await newEntity.save();
       res.status(200).json({ status: 200, data: crypto.encrypt(JSON.stringify(savedEntity)) });
     } catch (error) {
-      console.log("hello")
-      console.log(error);
       if (error.code === 11000) {
         // Duplicate key error
         return res.status(409).json({
@@ -83,7 +81,7 @@ entitiesRouter.post('/get-all-entities', async (req, res) => {
       const resData = await Entity.find(queryData).sort({ createdAt: -1 });
       res.status(200).json({ status: 200, data: crypto.encrypt(JSON.stringify(resData)) });
     } catch (error) {
-      console.log(error)
+      // console.log(error)
     }
 
   } catch (error) {
@@ -190,11 +188,10 @@ entitiesRouter.post('/get-month-invoice-data', async (req, res) => {
       const result = await Invoice.aggregate(aggregationPipeline);
       res.status(200).json({ status: 200, data: crypto.encrypt(JSON.stringify(result)) });
     }catch(err){
-      console.log(err)
+      // console.log(err)
     }
     
   } catch (error) {
-    console.log(error)
     res.status(500).json({ status: 500, message: error });
   }
 });
@@ -564,11 +561,10 @@ entitiesRouter.post('/delete-entity-by-id/:id', async (req, res) => {
         res.status(200).json({ status: 200, message: 'Entity deleted successfully' });
       })
       .catch((error) => {
-        console.log(error);
+        // console.log(error);
         res.status(500).json({ status: 500, message: 'Error deleting entity' });
       });
   } catch (error) {
-    console.log(error)
     res.status(500).json({ status: 500, message: error });
   }
 });
