@@ -11,7 +11,7 @@ class ConnectionManager {
     if (!connection) {
       connection = await mongoose.createConnection(dbUrl, options);
       this.connections.set(dbName, connection);
-      console.log(`Connected to database: ${dbName}`);
+      // console.log(`Connected to database: ${dbName}`);
     }
 
     return connection;
@@ -25,7 +25,7 @@ class ConnectionManager {
       connection.close();
       // Remove the connection from the cache
       this.connections.delete(dbName);
-      console.log(`Connection closed for database: ${dbName}`);
+      // console.log(`Connection closed for database: ${dbName}`);
     }
   }
 }

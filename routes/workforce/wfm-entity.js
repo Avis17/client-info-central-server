@@ -79,7 +79,6 @@ wfmEntitiesRouter.post('/get-all-entities', async (req, res) => {
             const resData = await Entity.find(queryData).sort({ createdAt: -1 });
             res.status(200).json({ status: 200, data: crypto.encrypt(JSON.stringify(resData)) });
         } catch (error) {
-            console.log(error)
         }
 
     } catch (error) {
@@ -124,11 +123,9 @@ wfmEntitiesRouter.post('/delete-entity-by-id/:id', async (req, res) => {
                 res.status(200).json({ status: 200, message: 'Entity deleted successfully' });
             })
             .catch((error) => {
-                console.log(error);
                 res.status(500).json({ status: 500, message: 'Error deleting entity' });
             });
     } catch (error) {
-        console.log(error)
         res.status(500).json({ status: 500, message: error });
     }
 });
