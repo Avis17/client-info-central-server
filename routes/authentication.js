@@ -161,8 +161,8 @@ router.post('/forgot-password', async (req, res) => {
     await user.save();
 
     // Create a password reset URL with the token
-    // const resetUrl = `https://customer-info-central.onrender.com/reset-password?token=${resetToken}`;
-    const resetUrl = `http://localhost:2000/reset-password?token=${resetToken}`;
+    const resetUrl = `https://customer-info-central.onrender.com/reset-password?token=${resetToken}`;
+    // const resetUrl = `http://localhost:2000/reset-password?token=${resetToken}`;
 
     // Send the password reset email
     const transporter = nodemailer.createTransport({

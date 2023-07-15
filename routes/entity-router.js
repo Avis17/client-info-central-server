@@ -184,13 +184,13 @@ entitiesRouter.post('/get-month-invoice-data', async (req, res) => {
         }
       }
     ];
-    try{
+    try {
       const result = await Invoice.aggregate(aggregationPipeline);
       res.status(200).json({ status: 200, data: crypto.encrypt(JSON.stringify(result)) });
-    }catch(err){
+    } catch (err) {
       // console.log(err)
     }
-    
+
   } catch (error) {
     res.status(500).json({ status: 500, message: error });
   }
@@ -542,6 +542,31 @@ entitiesRouter.put('/update-entity-by-id/:id', async (req, res) => {
     res.status(500).json({ status: 500, message: error });
   }
 });
+
+entitiesRouter.put('/update-entity', async (req, res) => {
+  try {
+    const dbName = req.body.dbName;
+    const collectionName = req.body.collectionName;
+    const query = req.body.query;
+    const collectionData = req.body.collectionData;
+    const db = connectionPool.useDb(dbName);
+
+    const Entity = db.model(collectionName, new mongoose.Schema({}, { strict: false, timestamps: true }));
+    let resData = await Entity.findOne(query);
+    if (!resData) {
+      resData = new Entity(collectionData);
+    } else {
+      resData.set(collectionData);
+    }
+    await resData.save();
+    res.status(200).json({ status: 200, data: crypto.encrypt(JSON.stringify(resData)) });
+  } catch (error) {
+    res.status(500).json({ status: 500, message: error });
+  }
+});
+
+
+
 
 // Delete an entity
 entitiesRouter.post('/delete-entity-by-id/:id', async (req, res) => {
